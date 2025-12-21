@@ -368,6 +368,7 @@ public final class RegistryHandler {
         registry.register(setupItem(new ItemThaumiumRobes(EntityEquipmentSlot.CHEST), "thaumium_robes_chestplate"));
         registry.register(setupItem(new ItemThaumiumRobes(EntityEquipmentSlot.LEGS), "thaumium_robes_leggings"));
         registry.register(setupItem(new ItemCelestialObserverPlacer(), "celestial_observer_placer"));
+        registry.register(setupItem(new Item(), "void_heart_infused"));
         
         AugmentHandler.registerAugmentBuilderComponents();
     }
