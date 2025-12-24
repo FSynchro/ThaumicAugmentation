@@ -198,6 +198,8 @@ import thecodex6824.thaumicaugmentation.common.world.biome.BiomeEmptiness;
 import thecodex6824.thaumicaugmentation.common.world.biome.BiomeEmptinessHighlands;
 import thecodex6824.thaumicaugmentation.common.world.biome.BiomeTaintedLands;
 
+import org.zeith.thaumicadditions.init.KnowledgeTAR; // custom aspects from additions!
+
 import java.util.HashMap;
 import java.util.function.Supplier;
 
@@ -538,6 +540,18 @@ public final class RegistryHandler {
         proxy.registerObjectTag(new ItemStack(TABlocks.CAPSTONE, 1, 2), new AspectList().add(Aspect.EARTH, 5).add(Aspect.ELDRITCH, 15).add(Aspect.MAGIC, 5).add(Aspect.SOUL, 3));
         proxy.registerObjectTag(new ItemStack(TABlocks.CAPSTONE, 1, 3), new AspectList().add(Aspect.EARTH, 5).add(Aspect.ELDRITCH, 15).add(Aspect.MAGIC, 5).add(Aspect.SOUL, 3));
         proxy.registerObjectTag(new ItemStack(TABlocks.OBELISK), new AspectList().add(Aspect.EARTH, 5).add(Aspect.ELDRITCH, 10));
+
+        // Add aspect to impetus heart (new code yay)
+        // Registering the Impetus Heart
+// ... inside registerAspects
+        proxy.registerObjectTag(new ItemStack(TAItems.IMPETUS_HEART), new AspectList()
+                .add(Aspect.VOID, 120)
+                .add(KnowledgeTAR.CAELES, 60)
+                .add(KnowledgeTAR.DRACO, 100)
+                .add(Aspect.FLUX, 130)
+        );
+
+
         AspectList shared = new AspectList().add(Aspect.EARTH, 5).add(Aspect.ELDRITCH, 15).add(Aspect.MECHANISM, 15);
         for (int i = 0; i < 16; ++i)
             proxy.registerObjectTag(new ItemStack(TABlocks.ELDRITCH_LOCK, 1, i), shared.copy());
