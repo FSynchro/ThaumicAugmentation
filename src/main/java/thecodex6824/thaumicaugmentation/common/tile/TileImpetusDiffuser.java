@@ -100,10 +100,10 @@ public class TileImpetusDiffuser extends TileEntity implements ITickable, IAnima
 	@Override
 	public void update() {
 		if (!world.isRemote) {
-			// Logic runs once per second (20 ticks)
+			// SERVER SIDE
 			if (ticks++ % 20 == 0 && world.getBlockState(pos).getValue(IEnabledBlock.ENABLED)) {
 
-				// --- PART 1: CHARGING PLAYERS & ENTITIES (Original Mod Logic) ---
+				// --- PART 1: CHARGING PLAYERS & ENTITIES ---
 				for (EntityLivingBase entity : world.getEntitiesWithinAABB(EntityLivingBase.class, new AxisAlignedBB(pos).grow(7))) {
 					if (entity instanceof EntityPlayer) {
 						EntityPlayer player = (EntityPlayer) entity;
@@ -168,7 +168,7 @@ public class TileImpetusDiffuser extends TileEntity implements ITickable, IAnima
 					}
 				}
 
-				// --- PART 2: BLOCK SCANNING (Void Siphons & Pedestals) ---
+				// --- PART 2: BLOCK SCANNING ---
 				MutableBlockPos check = new MutableBlockPos();
 				for (int y = -4; y < 5; ++y) {
 					for (int x = -4; x < 5; ++x) {
@@ -177,7 +177,7 @@ public class TileImpetusDiffuser extends TileEntity implements ITickable, IAnima
 							IBlockState state = world.getBlockState(check);
 							TileEntity tile = world.getTileEntity(check);
 
-							// --- LOGIC A: VOID SIPHON (The Fix for Void Seeds) ---
+							// VOID SIPHON LOGIC
 							if (state.getBlock() == BlocksTC.voidSiphon && tile instanceof TileVoidSiphon) {
 								TileVoidSiphon siphon = (TileVoidSiphon) tile;
 								if (BlockStateUtils.isEnabled(state)) {
@@ -199,10 +199,8 @@ public class TileImpetusDiffuser extends TileEntity implements ITickable, IAnima
 												ItemStack contained = siphon.getStackInSlot(0);
 												if (contained.isEmpty() || (contained.getItem() == ItemsTC.voidSeed && contained.getCount() < contained.getMaxStackSize())) {
 													siphon.progress -= 2000;
-													if (contained.isEmpty())
-														siphon.setInventorySlotContents(0, new ItemStack(ItemsTC.voidSeed));
-													else
-														siphon.setInventorySlotContents(0, new ItemStack(contained.getItem(), contained.getCount() + 1));
+													if (contained.isEmpty()) siphon.setInventorySlotContents(0, new ItemStack(ItemsTC.voidSeed));
+													else siphon.setInventorySlotContents(0, new ItemStack(contained.getItem(), contained.getCount() + 1));
 													sync = true;
 												} else break;
 											}
@@ -211,18 +209,11 @@ public class TileImpetusDiffuser extends TileEntity implements ITickable, IAnima
 									}
 								}
 							}
-							// --- LOGIC B: PEDESTALS (The Tiered Transformation) ---
+							// PEDESTAL LOGIC
 							else if (tile instanceof thaumcraft.common.tiles.crafting.TilePedestal) {
 								thaumcraft.common.tiles.crafting.TilePedestal pedestal = (thaumcraft.common.tiles.crafting.TilePedestal) tile;
 								ItemStack stack = pedestal.getStackInSlot(0);
-
 								if (!stack.isEmpty() && stack.getItem().getRegistryName().toString().equals("draconicevolution:dragon_heart")) {
-
-									// Identify pedestal tier
-									String regName = state.getBlock().getRegistryName().toString();
-									int chance = (regName.equals("thaumcraft:pedestal_ancient")) ? 26 :
-											(regName.equals("thaumcraft:pedestal_eldritch")) ? 28 : 32;
-
 									ConsumeResult result = consumer.consume(75, false);
 									if (result.energyConsumed > 0) {
 										NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
@@ -233,9 +224,10 @@ public class TileImpetusDiffuser extends TileEntity implements ITickable, IAnima
 											ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.65, 0.5), new Vec3d(check).add(0.5, 1.1, 0.5));
 										}
 
+										int chance = (state.getBlock().getRegistryName().toString().contains("ancient")) ? 52 : 64;
 										if (world.rand.nextInt(chance) == 0) {
 											pedestal.setInventorySlotContents(0, new ItemStack(thecodex6824.thaumicaugmentation.api.TAItems.IMPETUS_HEART));
-											world.playSound(null, check, thaumcraft.common.lib.SoundsTC.wand, SoundCategory.BLOCKS, 1.0F, 1.0F);
+											world.playSound(null, check, thaumcraft.common.lib.SoundsTC.zap, SoundCategory.BLOCKS, 1.0F, 1.0F);
 											pedestal.markDirty();
 											world.notifyBlockUpdate(check, state, state, 3);
 											pedestal.syncTile(false);
@@ -246,21 +238,20 @@ public class TileImpetusDiffuser extends TileEntity implements ITickable, IAnima
 						}
 					}
 				}
-			}
-			if (ticks % 20 == 0) {
+				// YOUR VALIDATION GATE
 				NodeHelper.validate(consumer, world);
 			}
 		} else if (world.isRemote && world.getTotalWorldTime() % 20 == 0) {
+			// CLIENT SIDE ANIMATION
 			IBlockState state = world.getBlockState(pos);
-			if (state.getPropertyKeys().contains(IEnabledBlock.ENABLED)) {
-				boolean enabled = state.getValue(IEnabledBlock.ENABLED);
-				if (enabled != lastState) {
-					lastState = enabled;
-					AnimationHelper.transitionSafely(asm, lastState ? "enabled" : "disabled");
-				}
+			boolean enabled = state.getPropertyKeys().contains(IEnabledBlock.ENABLED) && state.getValue(IEnabledBlock.ENABLED);
+			if (enabled != lastState) {
+				lastState = enabled;
+				AnimationHelper.transitionSafely(asm, lastState ? "enabled" : "disabled");
 			}
 		}
 	}
+
 
     @Override
     public void setPos(BlockPos posIn) {
