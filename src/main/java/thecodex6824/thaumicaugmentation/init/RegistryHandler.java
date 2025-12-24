@@ -542,13 +542,11 @@ public final class RegistryHandler {
         proxy.registerObjectTag(new ItemStack(TABlocks.OBELISK), new AspectList().add(Aspect.EARTH, 5).add(Aspect.ELDRITCH, 10));
 
         // Add aspect to impetus heart (new code yay)
-        // Registering the Impetus Heart
-// ... inside registerAspects
         proxy.registerObjectTag(new ItemStack(TAItems.IMPETUS_HEART), new AspectList()
-                .add(Aspect.VOID, 120)
-                .add(KnowledgeTAR.CAELES, 60)
-                .add(KnowledgeTAR.DRACO, 100)
-                .add(Aspect.FLUX, 130)
+                .add(Aspect.DARKNESS, 120)      // Tenebrae (Base TC6)
+                .add(KnowledgeTAR.CAELES, 60)   // Caeles (Thaumic Additions)
+                .add(KnowledgeTAR.DRACO, 100)   // Draco (Thaumic Additions)
+                .add(Aspect.FLUX, 130)         // Vitium/Flux (Base TC6)
         );
 
 
