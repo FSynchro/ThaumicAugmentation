@@ -74,6 +74,7 @@ import thecodex6824.thaumicaugmentation.common.tile.trait.IAnimatedTile;
 import thecodex6824.thaumicaugmentation.common.util.AnimationHelper;
 import thaumcraft.common.tiles.crafting.TilePedestal;
 import net.minecraft.util.SoundCategory;
+import thecodex6824.thaumicaugmentation.api.TAItems;
 
 public class TileImpetusDiffuser extends TileEntity implements ITickable, IAnimatedTile {
 
