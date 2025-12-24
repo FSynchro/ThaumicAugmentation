@@ -24,6 +24,7 @@ Features
 * Fortified Glass, blast resistant glass with the appearance of Warded Glass from Thaumcraft 4, good for base defense or decoration.
 * Starfield Glass, a window into the world seen on the other side of a Flux Rift or through a magic mirror, now safely held within a single block of glass.
 * The secrets of the Eldritch, reimagined for Thaumcraft 6. A vast Emptiness with dark forces hidden within is waiting to be challenged, but with enough dedication you may be able to use these forces for yourself.
+* Added a new recipe for my personal server to transcend the eldritch into Draconic logic, added lore to bridge this gap.
 
 License
 -----
