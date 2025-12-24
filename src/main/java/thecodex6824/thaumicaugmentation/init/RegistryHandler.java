@@ -148,6 +148,7 @@ import thecodex6824.thaumicaugmentation.common.item.ItemVoidBoots;
 import thecodex6824.thaumicaugmentation.common.item.block.ItemBlockImpetusMirror;
 import thecodex6824.thaumicaugmentation.common.item.block.ItemBlockRiftJar;
 import thecodex6824.thaumicaugmentation.common.item.prefab.ItemTABase;
+import thecodex6824.thaumicaugmentation.common.item.ItemImpetus_Heart;
 import thecodex6824.thaumicaugmentation.common.recipe.AugmentAdditionRecipe;
 import thecodex6824.thaumicaugmentation.common.recipe.AugmentRemovalRecipe;
 import thecodex6824.thaumicaugmentation.common.recipe.AuthorizedKeyCreationRecipe;
@@ -368,7 +369,7 @@ public final class RegistryHandler {
         registry.register(setupItem(new ItemThaumiumRobes(EntityEquipmentSlot.CHEST), "thaumium_robes_chestplate"));
         registry.register(setupItem(new ItemThaumiumRobes(EntityEquipmentSlot.LEGS), "thaumium_robes_leggings"));
         registry.register(setupItem(new ItemCelestialObserverPlacer(), "celestial_observer_placer"));
-        registry.register(setupItem(new Item(), "void_heart_infused"));
+        registry.register(setupItem(new ItemImpetus_Heart(), "impetus_heart"));
         
         AugmentHandler.registerAugmentBuilderComponents();
     }

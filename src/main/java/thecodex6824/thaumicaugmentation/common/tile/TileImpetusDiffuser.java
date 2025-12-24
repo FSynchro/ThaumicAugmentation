@@ -18,6 +18,8 @@
  *  along with Thaumic Augmentation.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+
+
 package thecodex6824.thaumicaugmentation.common.tile;
 
 import java.util.Deque;
@@ -70,6 +72,8 @@ import thecodex6824.thaumicaugmentation.api.impetus.node.prefab.SimpleImpetusCon
 import thecodex6824.thaumicaugmentation.api.util.DimensionalBlockPos;
 import thecodex6824.thaumicaugmentation.common.tile.trait.IAnimatedTile;
 import thecodex6824.thaumicaugmentation.common.util.AnimationHelper;
+import thaumcraft.common.tiles.crafting.TilePedestal;
+import net.minecraft.util.SoundCategory;
 
 public class TileImpetusDiffuser extends TileEntity implements ITickable, IAnimatedTile {
 
@@ -92,161 +96,170 @@ public class TileImpetusDiffuser extends TileEntity implements ITickable, IAnima
 		ImmutableMap.<String, ITimeValue>of());
     }
 
-    @Override
-    public void update() {
-	if (!world.isRemote) {
-	    if (ticks++ % 20 == 0 && world.getBlockState(pos).getValue(IEnabledBlock.ENABLED)) {
-		for (EntityLivingBase entity : world.getEntitiesWithinAABB(EntityLivingBase.class, new AxisAlignedBB(pos).grow(7))) {
-		    if (entity instanceof EntityPlayer) {
-			EntityPlayer player = (EntityPlayer) entity;
-			for (ItemStack stack : player.inventory.mainInventory) {
-			    IImpetusStorage storage = stack.getCapability(CapabilityImpetusStorage.IMPETUS_STORAGE, null);
-			    if (storage != null && storage.canReceive()) {
-				long canReceive = Math.min(storage.receiveEnergy(Long.MAX_VALUE, true), 25);
-				ConsumeResult result = consumer.consume(canReceive, false);
-				if (storage.receiveEnergy(result.energyConsumed, false) > 0) {
-				    ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.5, 0.5), player.getPositionVector().add(0, player.height / 2, 0));
-				    NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
-				    for (Map.Entry<Deque<IImpetusNode>, Long> entry : result.paths.entrySet())
-					NodeHelper.damageEntitiesFromTransaction(entry.getKey(), entry.getValue());
-				}
-			    }
+	@Override
+	public void update() {
+		if (!world.isRemote) {
+			// Logic runs once per second (20 ticks)
+			if (ticks++ % 20 == 0 && world.getBlockState(pos).getValue(IEnabledBlock.ENABLED)) {
 
-			    IAugmentableItem augmentable = stack.getCapability(CapabilityAugmentableItem.AUGMENTABLE_ITEM, null);
-			    if (augmentable != null) {
-				for (ItemStack s : augmentable.getAllAugments()) {
-				    IImpetusStorage augStorage = s.getCapability(CapabilityImpetusStorage.IMPETUS_STORAGE, null);
-				    if (augStorage != null && augStorage.canReceive()) {
-					long canReceive = Math.min(augStorage.receiveEnergy(Long.MAX_VALUE, true), 25);
-					ConsumeResult result = consumer.consume(canReceive, false);
-					if (augStorage.receiveEnergy(result.energyConsumed, false) > 0) {
-					    ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.5, 0.5), player.getPositionVector().add(0, player.height / 2, 0));
-					    NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
-					    for (Map.Entry<Deque<IImpetusNode>, Long> entry : result.paths.entrySet())
-						NodeHelper.damageEntitiesFromTransaction(entry.getKey(), entry.getValue());
-					}
-				    }
-				}
-			    }
-			}
-		    }
+				// --- PART 1: CHARGING PLAYERS & ENTITIES (Original Mod Logic) ---
+				for (EntityLivingBase entity : world.getEntitiesWithinAABB(EntityLivingBase.class, new AxisAlignedBB(pos).grow(7))) {
+					if (entity instanceof EntityPlayer) {
+						EntityPlayer player = (EntityPlayer) entity;
+						for (ItemStack stack : player.inventory.mainInventory) {
+							IImpetusStorage storage = stack.getCapability(CapabilityImpetusStorage.IMPETUS_STORAGE, null);
+							if (storage != null && storage.canReceive()) {
+								long canReceive = Math.min(storage.receiveEnergy(Long.MAX_VALUE, true), 25);
+								ConsumeResult result = consumer.consume(canReceive, false);
+								if (storage.receiveEnergy(result.energyConsumed, false) > 0) {
+									ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.5, 0.5), player.getPositionVector().add(0, player.height / 2, 0));
+									NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
+									for (Map.Entry<Deque<IImpetusNode>, Long> entry : result.paths.entrySet())
+										NodeHelper.damageEntitiesFromTransaction(entry.getKey(), entry.getValue());
+								}
+							}
 
-		    for (Function<Entity, Iterable<ItemStack>> func : AugmentAPI.getAugmentableItemSources()) {
-			for (ItemStack stack : func.apply(entity)) {
-			    IImpetusStorage storage = stack.getCapability(CapabilityImpetusStorage.IMPETUS_STORAGE, null);
-			    if (storage != null && storage.canReceive()) {
-				long canReceive = Math.min(storage.receiveEnergy(Long.MAX_VALUE, true), 25);
-				ConsumeResult result = consumer.consume(canReceive, false);
-				if (storage.receiveEnergy(result.energyConsumed, false) > 0) {
-				    ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.5, 0.5), entity.getPositionVector());
-				    NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
-				    for (Map.Entry<Deque<IImpetusNode>, Long> entry : result.paths.entrySet())
-					NodeHelper.damageEntitiesFromTransaction(entry.getKey(), entry.getValue());
-				}
-			    }
-
-			    IAugmentableItem augmentable = stack.getCapability(CapabilityAugmentableItem.AUGMENTABLE_ITEM, null);
-			    if (augmentable != null) {
-				for (ItemStack s : augmentable.getAllAugments()) {
-				    IImpetusStorage augStorage = s.getCapability(CapabilityImpetusStorage.IMPETUS_STORAGE, null);
-				    if (augStorage != null && augStorage.canReceive()) {
-					long canReceive = Math.min(augStorage.receiveEnergy(Long.MAX_VALUE, true), 25);
-					ConsumeResult result = consumer.consume(canReceive, false);
-					if (augStorage.receiveEnergy(result.energyConsumed, false) > 0) {
-					    ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.5, 0.5), entity.getPositionVector());
-					    NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
-					    for (Map.Entry<Deque<IImpetusNode>, Long> entry : result.paths.entrySet())
-						NodeHelper.damageEntitiesFromTransaction(entry.getKey(), entry.getValue());
-					}
-				    }
-				}
-			    }
-			}
-		    }
-
-		    IImpetusStorage entityStorage = entity.getCapability(CapabilityImpetusStorage.IMPETUS_STORAGE, null);
-		    if (entityStorage != null && entityStorage.canReceive()) {
-			long canReceive = Math.min(entityStorage.receiveEnergy(Long.MAX_VALUE, true), 25);
-			ConsumeResult result = consumer.consume(canReceive, false);
-			if (entityStorage.receiveEnergy(result.energyConsumed, false) > 0) {
-			    ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.5, 0.5), entity.getPositionVector());
-			    NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
-			    for (Map.Entry<Deque<IImpetusNode>, Long> entry : result.paths.entrySet())
-				NodeHelper.damageEntitiesFromTransaction(entry.getKey(), entry.getValue());
-			}
-		    }
-		}
-
-		MutableBlockPos check = new MutableBlockPos();
-		for (int y = -4; y < 5; ++y) {
-		    for (int x = -4; x < 5; ++x) {
-			for (int z = -4; z < 5; ++z) {
-			    check.setPos(x + pos.getX(), y + pos.getY(), z + pos.getZ());
-			    IBlockState state = world.getBlockState(check);
-			    if (state.getBlock() == BlocksTC.voidSiphon) {
-				TileEntity tile = world.getTileEntity(check);
-				if (tile instanceof TileVoidSiphon) {
-				    TileVoidSiphon siphon = (TileVoidSiphon) tile;
-				    if (BlockStateUtils.isEnabled(state)) {
-					ItemStack initial = siphon.getStackInSlot(0);
-					if (initial.isEmpty() ||
-						(initial.getItem() == ItemsTC.voidSeed && initial.getCount() < initial.getMaxStackSize())) {
-
-					    ConsumeResult result = consumer.consume(75, false);
-					    if (result.energyConsumed > 0) {
-						NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
-						for (Map.Entry<Deque<IImpetusNode>, Long> entry : result.paths.entrySet())
-						    NodeHelper.damageEntitiesFromTransaction(entry.getKey(), entry.getValue());
-
-						siphon.progress += (int) Math.ceil(result.energyConsumed / 1.5F);
-						if ((ticks - 1) % 40 == 0) {
-						    ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.65, 0.5),
-							    new Vec3d(check).add(0.5, 0.85, 0.5));
+							IAugmentableItem augmentable = stack.getCapability(CapabilityAugmentableItem.AUGMENTABLE_ITEM, null);
+							if (augmentable != null) {
+								for (ItemStack s : augmentable.getAllAugments()) {
+									IImpetusStorage augStorage = s.getCapability(CapabilityImpetusStorage.IMPETUS_STORAGE, null);
+									if (augStorage != null && augStorage.canReceive()) {
+										long canReceive = Math.min(augStorage.receiveEnergy(Long.MAX_VALUE, true), 25);
+										ConsumeResult result = consumer.consume(canReceive, false);
+										if (augStorage.receiveEnergy(result.energyConsumed, false) > 0) {
+											ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.5, 0.5), player.getPositionVector().add(0, player.height / 2, 0));
+											NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
+											for (Map.Entry<Deque<IImpetusNode>, Long> entry : result.paths.entrySet())
+												NodeHelper.damageEntitiesFromTransaction(entry.getKey(), entry.getValue());
+										}
+									}
+								}
+							}
 						}
-
-						boolean sync = false;
-						while (siphon.progress >= 2000) {
-						    ItemStack contained = siphon.getStackInSlot(0);
-						    if (contained.isEmpty() ||
-							    (contained.getItem() == ItemsTC.voidSeed && contained.getCount() < contained.getMaxStackSize())) {
-
-							siphon.progress -= 2000;
-							if (contained.isEmpty())
-							    siphon.setInventorySlotContents(0, new ItemStack(ItemsTC.voidSeed));
-							else
-							    siphon.setInventorySlotContents(0, new ItemStack(contained.getItem(), contained.getCount() + 1));
-
-							sync = true;
-						    }
-						    else
-							break;
-						}
-
-						if (sync)
-						    siphon.syncTile(false);
-					    }
 					}
-				    }
+
+					for (java.util.function.Function<Entity, Iterable<ItemStack>> func : AugmentAPI.getAugmentableItemSources()) {
+						for (ItemStack stack : func.apply(entity)) {
+							IImpetusStorage storage = stack.getCapability(CapabilityImpetusStorage.IMPETUS_STORAGE, null);
+							if (storage != null && storage.canReceive()) {
+								long canReceive = Math.min(storage.receiveEnergy(Long.MAX_VALUE, true), 25);
+								ConsumeResult result = consumer.consume(canReceive, false);
+								if (storage.receiveEnergy(result.energyConsumed, false) > 0) {
+									ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.5, 0.5), entity.getPositionVector());
+									NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
+									for (Map.Entry<Deque<IImpetusNode>, Long> entry : result.paths.entrySet())
+										NodeHelper.damageEntitiesFromTransaction(entry.getKey(), entry.getValue());
+								}
+							}
+						}
+					}
+
+					IImpetusStorage entityStorage = entity.getCapability(CapabilityImpetusStorage.IMPETUS_STORAGE, null);
+					if (entityStorage != null && entityStorage.canReceive()) {
+						long canReceive = Math.min(entityStorage.receiveEnergy(Long.MAX_VALUE, true), 25);
+						ConsumeResult result = consumer.consume(canReceive, false);
+						if (entityStorage.receiveEnergy(result.energyConsumed, false) > 0) {
+							ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.5, 0.5), entity.getPositionVector());
+							NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
+							for (Map.Entry<Deque<IImpetusNode>, Long> entry : result.paths.entrySet())
+								NodeHelper.damageEntitiesFromTransaction(entry.getKey(), entry.getValue());
+						}
+					}
 				}
-			    }
+
+				// --- PART 2: BLOCK SCANNING (Void Siphons & Pedestals) ---
+				MutableBlockPos check = new MutableBlockPos();
+				for (int y = -4; y < 5; ++y) {
+					for (int x = -4; x < 5; ++x) {
+						for (int z = -4; z < 5; ++z) {
+							check.setPos(x + pos.getX(), y + pos.getY(), z + pos.getZ());
+							IBlockState state = world.getBlockState(check);
+							TileEntity tile = world.getTileEntity(check);
+
+							// --- LOGIC A: VOID SIPHON (The Fix for Void Seeds) ---
+							if (state.getBlock() == BlocksTC.voidSiphon && tile instanceof TileVoidSiphon) {
+								TileVoidSiphon siphon = (TileVoidSiphon) tile;
+								if (BlockStateUtils.isEnabled(state)) {
+									ItemStack initial = siphon.getStackInSlot(0);
+									if (initial.isEmpty() || (initial.getItem() == ItemsTC.voidSeed && initial.getCount() < initial.getMaxStackSize())) {
+										ConsumeResult result = consumer.consume(75, false);
+										if (result.energyConsumed > 0) {
+											NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
+											for (Map.Entry<Deque<IImpetusNode>, Long> entry : result.paths.entrySet())
+												NodeHelper.damageEntitiesFromTransaction(entry.getKey(), entry.getValue());
+
+											siphon.progress += (int) Math.ceil(result.energyConsumed / 1.5F);
+											if ((ticks - 1) % 40 == 0) {
+												ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.65, 0.5), new Vec3d(check).add(0.5, 0.85, 0.5));
+											}
+
+											boolean sync = false;
+											while (siphon.progress >= 2000) {
+												ItemStack contained = siphon.getStackInSlot(0);
+												if (contained.isEmpty() || (contained.getItem() == ItemsTC.voidSeed && contained.getCount() < contained.getMaxStackSize())) {
+													siphon.progress -= 2000;
+													if (contained.isEmpty())
+														siphon.setInventorySlotContents(0, new ItemStack(ItemsTC.voidSeed));
+													else
+														siphon.setInventorySlotContents(0, new ItemStack(contained.getItem(), contained.getCount() + 1));
+													sync = true;
+												} else break;
+											}
+											if (sync) siphon.syncTile(false);
+										}
+									}
+								}
+							}
+							// --- LOGIC B: PEDESTALS (The Tiered Transformation) ---
+							else if (tile instanceof thaumcraft.common.tiles.crafting.TilePedestal) {
+								thaumcraft.common.tiles.crafting.TilePedestal pedestal = (thaumcraft.common.tiles.crafting.TilePedestal) tile;
+								ItemStack stack = pedestal.getStackInSlot(0);
+
+								if (!stack.isEmpty() && stack.getItem().getRegistryName().toString().equals("draconicevolution:dragon_heart")) {
+
+									// Identify pedestal tier
+									String regName = state.getBlock().getRegistryName().toString();
+									int chance = (regName.equals("thaumcraft:pedestal_ancient")) ? 26 :
+											(regName.equals("thaumcraft:pedestal_eldritch")) ? 28 : 32;
+
+									ConsumeResult result = consumer.consume(75, false);
+									if (result.energyConsumed > 0) {
+										NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
+										for (Map.Entry<Deque<IImpetusNode>, Long> entry : result.paths.entrySet())
+											NodeHelper.damageEntitiesFromTransaction(entry.getKey(), entry.getValue());
+
+										if ((ticks - 1) % 40 == 0) {
+											ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.65, 0.5), new Vec3d(check).add(0.5, 1.1, 0.5));
+										}
+
+										if (world.rand.nextInt(chance) == 0) {
+											pedestal.setInventorySlotContents(0, new ItemStack(thecodex6824.thaumicaugmentation.api.TAItems.IMPETUS_HEART));
+											world.playSound(null, check, thaumcraft.common.lib.SoundsTC.wand, SoundCategory.BLOCKS, 1.0F, 1.0F);
+											pedestal.markDirty();
+											world.notifyBlockUpdate(check, state, state, 3);
+											pedestal.syncTile(false);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
 			}
-		    }
+			if (ticks % 20 == 0) {
+				NodeHelper.validate(consumer, world);
+			}
+		} else if (world.isRemote && world.getTotalWorldTime() % 20 == 0) {
+			IBlockState state = world.getBlockState(pos);
+			if (state.getPropertyKeys().contains(IEnabledBlock.ENABLED)) {
+				boolean enabled = state.getValue(IEnabledBlock.ENABLED);
+				if (enabled != lastState) {
+					lastState = enabled;
+					AnimationHelper.transitionSafely(asm, lastState ? "enabled" : "disabled");
+				}
+			}
 		}
-	    }
-	    if (ticks % 20 == 0) {
-		NodeHelper.validate(consumer, world);
-	    }
 	}
-	else if (world.isRemote && world.getTotalWorldTime() % 20 == 0) {
-	    IBlockState state = world.getBlockState(pos);
-	    boolean enabled = state.getPropertyKeys().contains(IEnabledBlock.ENABLED) &&
-		    state.getValue(IEnabledBlock.ENABLED);
-	    if (enabled != lastState) {
-		lastState = enabled;
-		AnimationHelper.transitionSafely(asm, lastState ? "enabled" : "disabled");
-	    }
-	}
-    }
 
     @Override
     public void setPos(BlockPos posIn) {
@@ -338,5 +351,52 @@ public class TileImpetusDiffuser extends TileEntity implements ITickable, IAnima
 	else
 	    return super.getCapability(capability, facing);
     }
+
+	private void handleImpetusEffects(ConsumeResult result, BlockPos pos, BlockPos check) {
+		// Sync the purple lines (transactions)
+		NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
+		for (Map.Entry<Deque<IImpetusNode>, Long> entry : result.paths.entrySet())
+			NodeHelper.damageEntitiesFromTransaction(entry.getKey(), entry.getValue());
+
+		// Create the particle beam from Diffuser to Target
+		if ((ticks - 1) % 40 == 0) {
+			ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.65, 0.5), new Vec3d(check).add(0.5, 0.85, 0.5));
+		}
+	}
+
+	private void handleEntityCharging(EntityLivingBase entity) {
+		// This contains the original logic for charging player inventory and augments
+		if (entity instanceof EntityPlayer) {
+			EntityPlayer player = (EntityPlayer) entity;
+			for (ItemStack stack : player.inventory.mainInventory) {
+				processStorage(stack, player.getPositionVector().add(0, player.height / 2, 0));
+			}
+		}
+
+		// Entity capability charging
+		IImpetusStorage entityStorage = entity.getCapability(CapabilityImpetusStorage.IMPETUS_STORAGE, null);
+		if (entityStorage != null && entityStorage.canReceive()) {
+			long canReceive = Math.min(entityStorage.receiveEnergy(Long.MAX_VALUE, true), 25);
+			ConsumeResult result = consumer.consume(canReceive, false);
+			if (entityStorage.receiveEnergy(result.energyConsumed, false) > 0) {
+				ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.5, 0.5), entity.getPositionVector());
+				NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
+			}
+		}
+	}
+
+	// Internal helper for inventory processing
+	private void processStorage(ItemStack stack, Vec3d targetVec) {
+		IImpetusStorage storage = stack.getCapability(CapabilityImpetusStorage.IMPETUS_STORAGE, null);
+		if (storage != null && storage.canReceive()) {
+			long canReceive = Math.min(storage.receiveEnergy(Long.MAX_VALUE, true), 25);
+			ConsumeResult result = consumer.consume(canReceive, false);
+			if (storage.receiveEnergy(result.energyConsumed, false) > 0) {
+				ImpetusAPI.createImpetusParticles(world, new Vec3d(pos).add(0.5, 0.5, 0.5), targetVec);
+				NodeHelper.syncAllImpetusTransactions(result.paths.keySet());
+			}
+		}
+	}
+
 
 }
