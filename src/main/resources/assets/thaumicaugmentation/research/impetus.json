@@ -83,23 +83,40 @@
             "key": "IMPETUS_HEART_RESEARCH",
             "name": "thaumicaugmentation.research.impetus_heart.title",
             "category": "THAUMIC_AUGMENTATION",
-            "icons": ["thaumicaugmentation:impetus_heart"],
-            "parents": ["IMPETUS_MATRIX"],
-            "location": [12, 8],
-            "meta": ["HIDDEN"],
+            "icons": [
+                "thaumicaugmentation:impetus_heart"
+            ],
+            "parents": [
+                "IMPETUS_MATRIX"
+            ],
+            "location": [
+                12,
+                8
+            ],
+            "meta": [
+                "HIDDEN"
+            ],
             "stages": [
                 {
                     "text": "thaumicaugmentation.research.impetus_heart.0",
-                    "required_item": ["draconicevolution:dragon_heart"]
+                    "required_item": [
+                        "draconicevolution:dragon_heart"
+                    ]
                 },
                 {
                     "text": "thaumicaugmentation.research.impetus_heart.1",
-                    "required_item": ["thaumicaugmentation:impetus_heart"],
-                    "required_knowledge": ["OBSERVATION;ELDRITCH;1"]
+                    "required_item": [
+                        "thaumicaugmentation:impetus_heart"
+                    ],
+                    "required_knowledge": [
+                        "OBSERVATION;ELDRITCH;1"
+                    ]
                 },
                 {
                     "text": "thaumicaugmentation.research.impetus_heart.2",
-                    "required_item": ["draconicevolution:draconium_block:1"]
+                    "required_item": [
+                        "draconicevolution:draconic_block"
+                    ]
                 },
                 {
                     "text": "thaumicaugmentation.research.impetus_heart.3"
