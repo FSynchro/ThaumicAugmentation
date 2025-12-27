@@ -75,10 +75,6 @@ public class TileFluxInducerRF extends TileEntity implements ITickable {
                 // Not enough energy to meet the demand this tick
                 rfMetThisCycle = false;
 
-                // Only spawn failure particles occasionally to prevent lag
-                if (world.getTotalWorldTime() % 10 == 0) {
-                    spawnUnderpoweredEffects();
-                }
             }
         }
 
@@ -113,18 +109,6 @@ public class TileFluxInducerRF extends TileEntity implements ITickable {
             // Linear scaling for rifts up to 600
             rfPerTick = 50000 + (riftSize - 200) * 4875;
         }
-    }
-
-    private void spawnUnderpoweredEffects() {
-        TANetwork.INSTANCE.sendToAllAround(
-                new PacketParticleEffect(ParticleEffect.ESSENTIA_TRAIL,
-                        pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                        pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5,
-                        Aspect.FLUX.getColor()),
-                new net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint(
-                        world.provider.getDimension(),
-                        pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 32)
-        );
     }
 
     private void playZapSound() {
