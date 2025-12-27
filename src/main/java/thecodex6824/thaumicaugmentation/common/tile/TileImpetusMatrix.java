@@ -87,7 +87,7 @@ import thecodex6824.thaumicaugmentation.common.tile.trait.IAnimatedTile;
 @SuppressWarnings("deprecation")
 public class TileImpetusMatrix extends TileEntity implements ITickable, IAnimatedTile, IGogglesDisplayExtended {
 
-    protected static final long CELL_CAPACITY = 500;
+    protected static final long CELL_CAPACITY = 750;
     protected static final float MIN_STABILITY = -100.0F;
     protected static final float MAX_STABILITY = 25.0F;
     protected static final DecimalFormat STAB_FORMATTER = new DecimalFormat("#######.##");

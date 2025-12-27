@@ -104,11 +104,11 @@
             }
         ]
     },
-    "block.rf_inducer_machine_loop": {
+    "block.rift_feeder_overdrive_loop": {
         "category": "block",
         "sounds": [
             {
-                "name": "thaumicaugmentation:block/rfinducermachineloop",
+                "name": "thaumicaugmentation:block/rift_feeder_overdrive_loop",
                 "stream": true
             }
         ]

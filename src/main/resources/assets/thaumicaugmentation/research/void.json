@@ -412,6 +412,7 @@
                         "IMPETUS_HEART_RESEARCH"
                     ],
                     "recipes": [
+                        "thaumicaugmentation:rift_feeder",
                         "thaumicaugmentation:flux_inducer_rf"
                     ]
                 }

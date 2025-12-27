@@ -13,6 +13,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumFacing.Axis;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -24,6 +25,7 @@ import thaumcraft.api.aspects.Aspect;
 import thaumcraft.api.aspects.IEssentiaTransport;
 import thaumcraft.common.entities.EntityFluxRift;
 import thecodex6824.thaumicaugmentation.ThaumicAugmentation;
+import thecodex6824.thaumicaugmentation.api.TASounds;
 import thecodex6824.thaumicaugmentation.api.block.property.IDirectionalBlock;
 import thecodex6824.thaumicaugmentation.api.block.property.IEnabledBlock;
 import thecodex6824.thaumicaugmentation.api.util.RiftHelper;
@@ -36,8 +38,6 @@ public class TileRiftFeeder extends TileEntity implements ITickable, IEssentiaTr
     protected static final int MAX_ESSENTIA = 200;
     protected int storedEssentia;
     protected int ticks;
-
-    // Moved inside the class body to fix compilation error
     protected int cachedMaxRiftSize = 200;
 
     public TileRiftFeeder() {
@@ -99,6 +99,9 @@ public class TileRiftFeeder extends TileEntity implements ITickable, IEssentiaTr
                 if (storedEssentia > 0 && state.getValue(IEnabledBlock.ENABLED)) {
                     EntityFluxRift rift = findClosestRift(state.getValue(IDirectionalBlock.DIRECTION));
 
+                    // Sound Logic: Triggers periodically on the server side
+                    handleSoundLoop(state, rift != null);
+
                     if (rift != null && rift.getRiftSize() < cachedMaxRiftSize && !rift.getCollapse()) {
                         int required = (int) Math.sqrt(rift.getRiftSize());
                         if (storedEssentia >= required) {
@@ -117,18 +120,33 @@ public class TileRiftFeeder extends TileEntity implements ITickable, IEssentiaTr
                 }
             }
         }
-        else if (++ticks % 20 == 0) {
-            IBlockState state = world.getBlockState(pos);
-            EntityFluxRift rift = findClosestRift(state.getValue(IDirectionalBlock.DIRECTION));
-            if (rift != null && state.getPropertyKeys().contains(IDirectionalBlock.DIRECTION)) {
-                EnumFacing face = state.getValue(IDirectionalBlock.DIRECTION);
-                Vec3d ourPos = new Vec3d(pos.getX() + 0.5 + face.getXOffset() * 0.5, pos.getY() + 0.5 + face.getYOffset() * 0.5,
-                        pos.getZ() + 0.5 + face.getZOffset() * 0.5);
-                Vec3d sub = rift.getPositionVector().subtract(ourPos);
-                Vec3d dir = sub.normalize();
-                double speed = sub.length() / 40.0;
-                ThaumicAugmentation.proxy.getRenderHelper().renderParticleTrail(world, ourPos.x, ourPos.y, ourPos.z,
-                        dir.x * speed, dir.y * speed, dir.z * speed, 0.35F, 0.0F, 0.35F);
+        else {
+            // CLIENT SIDE - Particles Only
+            if (ticks % 20 == 0) {
+                IBlockState state = world.getBlockState(pos);
+                EntityFluxRift rift = findClosestRift(state.getValue(IDirectionalBlock.DIRECTION));
+
+                if (rift != null && state.getPropertyKeys().contains(IDirectionalBlock.DIRECTION)) {
+                    EnumFacing face = state.getValue(IDirectionalBlock.DIRECTION);
+                    Vec3d ourPos = new Vec3d(pos.getX() + 0.5 + face.getXOffset() * 0.5, pos.getY() + 0.5 + face.getYOffset() * 0.5,
+                            pos.getZ() + 0.5 + face.getZOffset() * 0.5);
+                    Vec3d sub = rift.getPositionVector().subtract(ourPos);
+                    Vec3d dir = sub.normalize();
+                    double speed = sub.length() / 40.0;
+                    ThaumicAugmentation.proxy.getRenderHelper().renderParticleTrail(world, ourPos.x, ourPos.y, ourPos.z,
+                            dir.x * speed, dir.y * speed, dir.z * speed, 0.35F, 0.0F, 0.35F);
+                }
+            }
+            ++ticks;
+        }
+    }
+
+    private void handleSoundLoop(IBlockState state, boolean hasRift) {
+        // We trigger the sound broadcast every 40 ticks (~2 seconds)
+        if (ticks % 40 == 0) {
+            if (hasRift && state.getValue(IEnabledBlock.ENABLED) && isBoosting()) {
+                world.playSound(null, pos, TASounds.RIFT_FEEDER_OVERDRIVE_LOOP,
+                        SoundCategory.BLOCKS, 1.0F, computeRFPitch());
             }
         }
     }
@@ -143,11 +161,9 @@ public class TileRiftFeeder extends TileEntity implements ITickable, IEssentiaTr
             TileEntity te = world.getTileEntity(pos.offset(face));
             if (te instanceof TileFluxInducerRF) {
                 TileFluxInducerRF inducer = (TileFluxInducerRF) te;
-                // NEW CHECK: Is the inducer actually pointing at us?
                 IBlockState inducerState = world.getBlockState(inducer.getPos());
                 EnumFacing inducerFacing = inducerState.getValue(IDirectionalBlock.DIRECTION);
 
-                // The inducer's nozzle must be pointing into the side it is attached to
                 if (inducerFacing == face.getOpposite()) {
                     EntityFluxRift rift = findClosestRift(front);
                     if (rift != null) {
@@ -160,7 +176,6 @@ public class TileRiftFeeder extends TileEntity implements ITickable, IEssentiaTr
                 }
             }
         }
-        // Boost capacity: 200 base + 200 per booster (max 2 boosters for 600 total)
         this.cachedMaxRiftSize = 200 + (Math.min(activeBoosters, 2) * 200);
     }
 
@@ -236,6 +251,7 @@ public class TileRiftFeeder extends TileEntity implements ITickable, IEssentiaTr
         cachedMaxRiftSize = tag.getInteger("maxRiftSize");
     }
 
-    public boolean isBoostingClient() { return cachedMaxRiftSize > 200; }
-    public float computeRFPitchClient() { return 0.5F + ((float)cachedMaxRiftSize / 600.0F); }
+    // Renamed to remove "Client" suffix as it's now used by the server
+    public boolean isBoosting() { return cachedMaxRiftSize > 200; }
+    public float computeRFPitch() { return 0.5F + ((float)cachedMaxRiftSize / 600.0F); }
 }
