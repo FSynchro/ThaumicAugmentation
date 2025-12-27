@@ -1,0 +1,7 @@
+{
+  "parent": "thaumicaugmentation:block/rift_feeder",
+  "textures": {
+    "3": "thaumicaugmentation:blocks/flux_inducer_rf",
+    "particle": "thaumicaugmentation:blocks/flux_inducer_rf"
+  }
+}

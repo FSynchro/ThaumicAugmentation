@@ -1,0 +1,31 @@
+{
+  "forge_marker": 1,
+  "defaults": {
+    "model": "thaumicaugmentation:flux_inducer_rf"
+  },
+  "variants": {
+    "ta_direction": {
+      "up": {"x": 270},
+      "down": {"x": 90},
+      "north": {},
+      "east": {"y": 90},
+      "south": {"y": 180},
+      "west": {"y": 270}
+    },
+    "ta_enabled": {
+      "false": {
+        "textures": {
+          "3": "thaumicaugmentation:blocks/flux_inducer_rf_disabled"
+        }
+      },
+      "true": {
+        "textures": {
+          "3": "thaumicaugmentation:blocks/flux_inducer_rf"
+        }
+      }
+    },
+    "inventory": {
+      "transform": "forge:default-block"
+    }
+  }
+}

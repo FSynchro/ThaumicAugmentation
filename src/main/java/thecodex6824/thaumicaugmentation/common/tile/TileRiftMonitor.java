@@ -109,21 +109,26 @@ public class TileRiftMonitor extends TileEntity implements ITickable {
     public boolean getMode() {
         return mode;
     }
-    
+
     public int getComparatorOutput() {
         Entity entity = target.get();
         if (entity instanceof EntityFluxRift) {
-            double ratio = 0.0;
-            if (mode)
+            double ratio;
+
+            if (mode) {
+                // Stability mode: unchanged
                 ratio = (((EntityFluxRift) entity).getRiftStability() + 100.0) / 200.0;
-            else
-                ratio = Math.min(((EntityFluxRift) entity).getRiftSize() / 200.0, 200.0);
-            
-            return (int) (Math.floor(ratio * 14) + Math.signum(ratio));
+            } else {
+                // Size mode: now scales to 600 instead of 200
+                ratio = Math.min(((EntityFluxRift) entity).getRiftSize() / 600.0, 1.0);
+            }
+
+            return (int)(Math.floor(ratio * 14) + Math.signum(ratio));
         }
-        
+
         return 0;
     }
+
     
     protected void loadTargetFromID() {
         if (!world.isRemote) {

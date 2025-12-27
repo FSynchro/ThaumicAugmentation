@@ -200,6 +200,9 @@ import thecodex6824.thaumicaugmentation.common.world.biome.BiomeTaintedLands;
 
 import org.zeith.thaumicadditions.init.KnowledgeTAR; // custom aspects from additions!
 
+import thecodex6824.thaumicaugmentation.common.block.BlockFluxInducerRF;
+import thecodex6824.thaumicaugmentation.common.tile.TileFluxInducerRF;
+
 import java.util.HashMap;
 import java.util.function.Supplier;
 
@@ -247,6 +250,7 @@ public final class RegistryHandler {
         registry.register(setupBlock(new BlockImpetusMatrix(), "impetus_matrix"));
         registry.register(setupBlock(new BlockImpetusMatrixBase(), "impetus_matrix_base"));
         registry.register(setupBlock(new BlockRiftFeeder(), "rift_feeder"));
+        registry.register(setupBlock(new BlockFluxInducerRF(), "flux_inducer_rf"));
         registry.register(setupBlock(new BlockRiftMoverInput(), "rift_mover_input"));
         registry.register(setupBlock(new BlockRiftMoverOutput(), "rift_mover_output"));
         registry.register(setupBlock(new BlockRiftJar(), "rift_jar"));
@@ -297,6 +301,7 @@ public final class RegistryHandler {
         GameRegistry.registerTileEntity(TileImpetusDiffuser.class, new ResourceLocation(ThaumicAugmentationAPI.MODID, "impetus_diffuser"));
         GameRegistry.registerTileEntity(TileImpetusMatrix.class, new ResourceLocation(ThaumicAugmentationAPI.MODID, "impetus_matrix"));
         GameRegistry.registerTileEntity(TileRiftFeeder.class, new ResourceLocation(ThaumicAugmentationAPI.MODID, "rift_feeder"));
+        GameRegistry.registerTileEntity(TileFluxInducerRF.class, new ResourceLocation(ThaumicAugmentationAPI.MODID, "flux_inducer_rf"));
         GameRegistry.registerTileEntity(TileRiftJar.class, new ResourceLocation(ThaumicAugmentationAPI.MODID, "rift_jar"));
         GameRegistry.registerTileEntity(TileRiftMoverInput.class, new ResourceLocation(ThaumicAugmentationAPI.MODID, "rift_mover_input"));
         GameRegistry.registerTileEntity(TileRiftMoverOutput.class, new ResourceLocation(ThaumicAugmentationAPI.MODID, "rift_mover_output"));

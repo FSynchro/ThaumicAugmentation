@@ -230,6 +230,23 @@ public final class RecipeHandler {
                         ItemsTC.mechanismSimple, "plateBrass", BlocksTC.tube, ItemsTC.morphicResonator, BlocksTC.plankGreatwood, BlocksTC.tube
                 }
         ));
+
+// --- New RF inducererererer
+        ThaumcraftApi.addInfusionCraftingRecipe(new ResourceLocation(ThaumicAugmentationAPI.MODID, "flux_inducer_rf"), new InfusionRecipeComplexResearch(
+                "RIFT_FEEDER@2",
+                new ItemStack(TABlocks.FLUX_INDUCER_RF),
+                15,
+                new AspectList().add(Aspect.FLUX, 60).add(Aspect.MECHANISM, 60).add(Aspect.ENERGY, 40).add(Aspect.MAGIC, 40),
+                TAItems.IMPETUS_HEART,
+                new Object[] {
+                        "ingotDraconicAwakened",
+                        "ingotDraconicAwakened",
+                        new ItemStack(ItemsTC.plate, 1, 3),
+                        "thermaldynamics:duct_0:5",
+                        ItemsTC.morphicResonator
+                }
+        ));
+
         
         ThaumcraftApi.addInfusionCraftingRecipe(new ResourceLocation(ThaumicAugmentationAPI.MODID, "thaumostatic_harness"), new InfusionRecipeComplexResearch(
                 "THAUMOSTATIC_HARNESS", new ItemStack(TAItems.THAUMOSTATIC_HARNESS), 6, new AspectList().add(Aspect.MECHANISM, 50).add(Aspect.MOTION, 25).add(Aspect.ENERGY, 50).add(Aspect.FLIGHT, 50),

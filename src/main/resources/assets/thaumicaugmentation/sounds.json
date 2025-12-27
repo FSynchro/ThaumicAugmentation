@@ -104,6 +104,15 @@
             }
         ]
     },
+    "block.rf_inducer_machine_loop": {
+        "category": "block",
+        "sounds": [
+            {
+                "name": "thaumicaugmentation:block/rfinducermachineloop",
+                "stream": true
+            }
+        ]
+    },
     "altar_summon_start": {
         "category": "block",
         "sounds": [

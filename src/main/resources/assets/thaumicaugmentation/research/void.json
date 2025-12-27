@@ -405,6 +405,15 @@
                     "recipes": [
                         "thaumicaugmentation:rift_feeder"
                     ]
+                },
+                {
+                    "text": "thaumicaugmentation.research.rift_feeder.2",
+                    "required_research": [
+                        "IMPETUS_HEART_RESEARCH"
+                    ],
+                    "recipes": [
+                        "thaumicaugmentation:flux_inducer_rf"
+                    ]
                 }
             ]
         },
