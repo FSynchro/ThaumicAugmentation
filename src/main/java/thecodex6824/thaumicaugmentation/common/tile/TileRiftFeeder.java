@@ -143,16 +143,24 @@ public class TileRiftFeeder extends TileEntity implements ITickable, IEssentiaTr
             TileEntity te = world.getTileEntity(pos.offset(face));
             if (te instanceof TileFluxInducerRF) {
                 TileFluxInducerRF inducer = (TileFluxInducerRF) te;
-                EntityFluxRift rift = findClosestRift(front);
-                if (rift != null) {
-                    inducer.setRiftSizeForCost(rift.getRiftSize());
-                }
+                // NEW CHECK: Is the inducer actually pointing at us?
+                IBlockState inducerState = world.getBlockState(inducer.getPos());
+                EnumFacing inducerFacing = inducerState.getValue(IDirectionalBlock.DIRECTION);
 
-                if (inducer.canBoost()) {
-                    activeBoosters++;
+                // The inducer's nozzle must be pointing into the side it is attached to
+                if (inducerFacing == face.getOpposite()) {
+                    EntityFluxRift rift = findClosestRift(front);
+                    if (rift != null) {
+                        inducer.setRiftSizeForCost(rift.getRiftSize());
+                    }
+
+                    if (inducer.canBoost()) {
+                        activeBoosters++;
+                    }
                 }
             }
         }
+        // Boost capacity: 200 base + 200 per booster (max 2 boosters for 600 total)
         this.cachedMaxRiftSize = 200 + (Math.min(activeBoosters, 2) * 200);
     }
 

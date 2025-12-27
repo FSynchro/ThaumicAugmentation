@@ -28,15 +28,14 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class TileFluxInducerRF extends TileEntity implements ITickable {
 
-    private final RFStorage energy = new RFStorage(10_000_000, 2_000_000);
+    // Increased capacity to 50M to handle high-size rift costs
+    private final RFStorage energy = new RFStorage(50_000_000, 10_000_000);
 
     private int rfPerTick = 0;
-    private int rfAccumulated = 0;
-    private int batchCounter = 0;
-    private static final int BATCH_INTERVAL = 20;
 
+    // Evaluation variables
     private int evalCounter = 0;
-    private static final int EVAL_INTERVAL = 300;
+    private static final int EVAL_INTERVAL = 300; // 15 seconds
     private boolean rfMetThisCycle = true;
     private boolean canBoost = false;
 
@@ -50,11 +49,13 @@ public class TileFluxInducerRF extends TileEntity implements ITickable {
 
         IBlockState state = world.getBlockState(pos);
 
+        // 1. Check if block is enabled by Redstone
         if (!state.getValue(IEnabledBlock.ENABLED)) {
             canBoost = false;
             return;
         }
 
+        // 2. Verify we are facing a Feeder
         EnumFacing facing = state.getValue(IDirectionalBlock.DIRECTION);
         TileEntity te = world.getTileEntity(pos.offset(facing));
         boolean facingFeeder = te instanceof TileRiftFeeder;
@@ -64,32 +65,36 @@ public class TileFluxInducerRF extends TileEntity implements ITickable {
             return;
         }
 
-        rfAccumulated += rfPerTick;
-        batchCounter++;
+        // 3. Continuous Energy Extraction (Per Tick)
+        if (rfPerTick > 0) {
+            int extracted = energy.extractEnergy(rfPerTick, true);
 
-        if (batchCounter >= BATCH_INTERVAL) {
-            int required = rfAccumulated;
-            int extracted = energy.extractEnergy(required, true);
-
-            if (extracted == required) {
-                energy.extractEnergy(required, false);
+            if (extracted >= rfPerTick) {
+                energy.extractEnergy(rfPerTick, false);
             } else {
+                // Not enough energy to meet the demand this tick
                 rfMetThisCycle = false;
-                spawnUnderpoweredEffects();
-            }
 
-            rfAccumulated = 0;
-            batchCounter = 0;
+                // Only spawn failure particles occasionally to prevent lag
+                if (world.getTotalWorldTime() % 10 == 0) {
+                    spawnUnderpoweredEffects();
+                }
+            }
         }
 
+        // 4. Boost Evaluation Logic
         evalCounter++;
         if (evalCounter >= EVAL_INTERVAL) {
+            // Success if energy was met for the whole 15s and still facing a feeder
             canBoost = rfMetThisCycle && facingFeeder;
+
+            // Reset for next evaluation cycle
             rfMetThisCycle = true;
             evalCounter = 0;
             markDirty();
         }
 
+        // 5. Failure Feedback (Zap Sound)
         if (!canBoost) {
             zapTimer--;
             if (zapTimer <= 0) {
@@ -105,6 +110,7 @@ public class TileFluxInducerRF extends TileEntity implements ITickable {
         } else if (riftSize <= 200) {
             rfPerTick = 50000;
         } else {
+            // Linear scaling for rifts up to 600
             rfPerTick = 50000 + (riftSize - 200) * 4875;
         }
     }
@@ -147,6 +153,7 @@ public class TileFluxInducerRF extends TileEntity implements ITickable {
         super.writeToNBT(tag);
         tag.setInteger("Energy", energy.getEnergyStored());
         tag.setBoolean("CanBoost", canBoost);
+        tag.setInteger("RFPerTick", rfPerTick);
         return tag;
     }
 
@@ -155,6 +162,7 @@ public class TileFluxInducerRF extends TileEntity implements ITickable {
         super.readFromNBT(tag);
         energy.setEnergy(tag.getInteger("Energy"));
         canBoost = tag.getBoolean("CanBoost");
+        rfPerTick = tag.getInteger("RFPerTick");
     }
 
     @Nullable
@@ -170,6 +178,9 @@ public class TileFluxInducerRF extends TileEntity implements ITickable {
         readFromNBT(pkt.getNbtCompound());
     }
 
+    /**
+     * Internal Forge Energy Storage class
+     */
     private static class RFStorage implements IEnergyStorage {
         private int energy;
         private final int capacity;
@@ -207,4 +218,4 @@ public class TileFluxInducerRF extends TileEntity implements ITickable {
         @Override
         public boolean canReceive() { return true; }
     }
-} // Final closing brace for the main class
+}
