@@ -138,12 +138,14 @@ public class ItemImpetus_Heart extends Item implements IModelProvider {
             guardian.homeZ = (int) rift.posZ;
             guardian.homeSet = true;
 
+            // --- ATMOSPHERIC EFFECTS ---
             WorldInfo info = world.getWorldInfo();
             info.setRaining(true);
             info.setThundering(true);
             info.setRainTime(40);
             info.setThunderTime(40);
 
+            // Large scale particles
             for (int i = 0; i < 30; i++) {
                 double offsetX = (world.rand.nextGaussian()) * 5.0D;
                 double offsetY = (world.rand.nextGaussian()) * 5.0D;
@@ -158,6 +160,22 @@ public class ItemImpetus_Heart extends Item implements IModelProvider {
             world.playSound(null, rift.posX, rift.posY, rift.posZ, SoundEvents.ENTITY_WITHER_SPAWN, SoundCategory.HOSTILE, 10.0F, 0.1F);
             world.playSound(null, rift.posX, rift.posY, rift.posZ, SoundEvents.ENTITY_LIGHTNING_THUNDER, SoundCategory.HOSTILE, 5.0F, 1.0F);
 
+            // --- SPAWN CHAOS SHARDS ---
+            // Safely get the item from Draconic Evolution
+            net.minecraft.item.ItemStack shardStack = new net.minecraft.item.ItemStack(
+                    net.minecraft.item.Item.getByNameOrId("draconicevolution:chaos_shard"), 2);
+
+            if (!shardStack.isEmpty()) {
+                EntityItem shards = new EntityItem(world, heart.posX, heart.posY, heart.posZ, shardStack);
+                // Physical "Burst" effect
+                shards.motionY = 0.4D;
+                shards.motionX = (world.rand.nextDouble() - 0.5D) * 0.2D;
+                shards.motionZ = (world.rand.nextDouble() - 0.5D) * 0.2D;
+                shards.setPickupDelay(20);
+                world.spawnEntity(shards);
+            }
+
+            // --- CLEANUP AND SPAWN BOSS ---
             rift.setDead();
             heart.setDead();
             world.spawnEntity(guardian);
